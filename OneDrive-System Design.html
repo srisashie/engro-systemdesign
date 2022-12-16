@@ -1,0 +1,719 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>OneDrive - System Design</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	text-indent: -1.7em;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-opaquegray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2f164cec-666d-4a02-97e6-8a4afb93e246" class="page sans"><header><img class="page-cover-image" src="file-storage-2.webp" style="object-position:center 62.41%"/><div class="page-header-icon page-header-icon-with-cover"><span class="icon">📓</span></div><h1 class="page-title">OneDrive - System Design</h1></header><div class="page-body"><p id="ab8378fd-410f-4c25-9af2-5f08f1957d05" class="">
+</p><nav id="c1e7cfa0-9d6b-4996-a3b9-664a6f9ef2af" class="table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#5fc297eb-093d-498f-bd8f-7eba96d44c49">OneDrive Features</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#0a2ac396-d2e2-4631-92fd-009e6f54a30c">Features in Scope</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#64a60fe6-aab2-4d70-b49e-515250d588f0">Non-Functional Requirements</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#41be0dfe-51e5-4e1c-be13-a272f3644ad2">High Level Architecture</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#265030d7-54aa-4234-8595-c5d682adafa3">User Authentication</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#0da3c785-dfd5-4b1c-a9db-b2438aa94769">File Storage</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#6a6c2acf-a997-40e1-8f80-ef256d37a325">Criteria for file storage</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#8b9e3771-02b9-49b8-b087-e6b5cc88ea04">File Sync</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2ea2d1d0-8ace-4c8a-b56e-dcff6c0545dd">2 use cases for file sync:</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#5c6bc245-8809-47a4-ba5f-0fce7e28df40">Sync mechanism for above use cases:</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#4bf819cb-e882-40e8-9224-b8debbe86fde">File metadata update: An update on file metadata has to be synced to other devices.</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#39b598e0-28a3-4ba7-a195-5d09159af746">File Collaboration </a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#0d0d2c16-227f-4855-9dad-87bf32f783c6">File APIs</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#dbcb1cfa-50f5-4af3-843d-8dde4bd2affe">APIs required for file metadata, upload and download files</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#5507a83c-fde9-40c7-84f0-d0fd798d61a8">Metadata APIs</a></div></nav><p id="94bda254-b936-4a92-91e4-8a5a4c9ad29e" class="">
+</p><p id="4fb40dc2-01ca-4c16-9882-8425c4fd3e4b" class="">
+</p><h1 id="5fc297eb-093d-498f-bd8f-7eba96d44c49" class="">OneDrive Features</h1><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="335c524f-bf5b-441b-954b-b8b389ee4183"><div style="font-size:1.5em"><span class="icon">💡</span></div><div style="width:100%">The list consists of simple features to keep the design simple. The list can be extended once the we achieve the fundamentals of this system’s design.  </div></figure><h1 id="0a2ac396-d2e2-4631-92fd-009e6f54a30c" class="">Features in Scope</h1><ul id="048e0d0e-d06b-4242-9d4a-d43cedc950f3" class="bulleted-list"><li style="list-style-type:disc">Upload files<ul id="0d2a0f93-57bb-48a3-98b4-21a4b1544f83" class="bulleted-list"><li style="list-style-type:circle">Authenticated users can upload one ore more files from any device.</li></ul><ul id="9b1e74fc-e4ba-4d2e-983e-be03d8da734a" class="bulleted-list"><li style="list-style-type:circle">Users can update or delete own files and files that have been shared to them</li></ul><ul id="06a7cf91-4019-460c-8c90-356707e06a12" class="bulleted-list"><li style="list-style-type:circle">Max file size per upload to be capped at 5 GB.</li></ul></li></ul><ul id="78843cdf-9d31-4966-86a7-8057064f43a9" class="bulleted-list"><li style="list-style-type:disc">Download files<ul id="9c1d3fcd-a796-45a1-80c7-c2f8aef20887" class="bulleted-list"><li style="list-style-type:circle">Authenticated users can download own files and shared files.</li></ul><ul id="9f6f5810-70ef-4ef6-b005-457115d293bb" class="bulleted-list"><li style="list-style-type:circle">No limit on file download. </li></ul><ul id="f67f5fc5-113d-45a2-92f6-dfef3a39f254" class="bulleted-list"><li style="list-style-type:circle">Users can download one file at a time (This is done for simplicity of current design)</li></ul></li></ul><ul id="2c1e4289-eb67-48be-a0c2-bb7811d2a8c6" class="bulleted-list"><li style="list-style-type:disc">Security<ul id="b8e94572-a741-453b-9383-c7e53bebd286" class="bulleted-list"><li style="list-style-type:circle">All files would be encrypted in transit and at rest</li></ul><ul id="0e841ab5-1a0a-4c3d-9f9f-8292e4bb4ab2" class="bulleted-list"><li style="list-style-type:circle">Files would be scanned for threats before uploading to final destination</li></ul><ul id="4ec40649-f351-4fa4-ac11-37c032c97eaa" class="bulleted-list"><li style="list-style-type:circle">File types would be validated comparing magic-bytes with file extension</li></ul></li></ul><ul id="efa75445-69e3-442f-b287-4acd3069046e" class="bulleted-list"><li style="list-style-type:disc">File Collaboration - Enable users to collaborate and edit files simultaneously</li></ul><ul id="94270042-2ef7-4650-a367-12dc6a009ee3" class="bulleted-list"><li style="list-style-type:disc">File Sync<ul id="26e9e9e7-68cd-4a1c-a268-d3ba2ac2e1d7" class="bulleted-list"><li style="list-style-type:circle">File updates would be synced to all registered devices or active sessions at near real time.</li></ul></li></ul><ul id="7dd8fcbd-546f-47fb-aea5-15ff9082a9f5" class="bulleted-list"><li style="list-style-type:disc">Supported file types - Any type of file</li></ul><ul id="8ce5b645-0d53-4c50-8db9-65b23b4ea516" class="bulleted-list"><li style="list-style-type:disc">Notifications - Users would see push notifications up on changes on any file</li></ul><ul id="498a423d-3db9-4aef-b22b-2e5b3459b72f" class="bulleted-list"><li style="list-style-type:disc">App clients - Support Web &amp; Mobile devices</li></ul><p id="04788574-1852-40b0-8003-1dd0f3dac64e" class="">
+</p><h1 id="64a60fe6-aab2-4d70-b49e-515250d588f0" class="">Non-Functional Requirements</h1><ul id="dfda8b1f-6a04-444d-95e4-32b350b35419" class="bulleted-list"><li style="list-style-type:disc">Fast sync - Directory and file listing and updates to be fast</li></ul><ul id="e7e06020-0ae8-42fd-86d7-92ba58562e8c" class="bulleted-list"><li style="list-style-type:disc">File upload &amp; download speeds - Controlled bandwidth usage</li></ul><ul id="8fbe1a76-8eb6-4252-968e-c792e83bad96" class="bulleted-list"><li style="list-style-type:disc">Scalability<ul id="69760164-3ac6-4b8a-8962-3232e9c5e7f9" class="bulleted-list"><li style="list-style-type:circle">Metadata &amp; file operations to meet high volumes of traffic and stay ahead of spikes </li></ul><ul id="b70b7595-4003-46ff-8693-bf354bbeb128" class="bulleted-list"><li style="list-style-type:circle">Implement orchestration to achieve scalability based the on demand of respective operations i.e. upload, download, listing etc… </li></ul></li></ul><ul id="0e0a1b5a-49b8-4691-9138-f4f6e8c73961" class="bulleted-list"><li style="list-style-type:disc">High Availability<ul id="19a4f1f1-ead8-4d2d-82d8-782d4ea64553" class="bulleted-list"><li style="list-style-type:circle">Users to be able to use services offline in the event of unexpected slow down or failures.</li></ul><ul id="888cc755-b33f-465c-a31b-827aaf780bf4" class="bulleted-list"><li style="list-style-type:circle">System to be resilient to errors and be sure to respond to user requests at all times.</li></ul></li></ul><p id="e0a26316-2b71-47af-a58d-8ef6d0f4d946" class="">
+</p><h1 id="41be0dfe-51e5-4e1c-be13-a272f3644ad2" class="">High Level Architecture</h1><p id="9de5ad03-0ab8-4624-8ae4-af9144b60617" class="">
+</p><figure id="1f0e5c9c-b67c-4543-b244-2df60f13c656" class="image"><a href="Untitled.png"><img style="width:756px" src="Untitled.png"/></a></figure><p id="2c0fd328-252c-4261-b396-f3b1614360c7" class="">
+</p><h1 id="265030d7-54aa-4234-8595-c5d682adafa3" class="">User Authentication</h1><p id="8a3863f5-b574-4856-9f9a-e0db1ded3546" class="">Authentication using OAuth</p><figure id="d58767eb-7ab7-4953-a544-69af3f844c5a" class="image"><a href="Untitled%201.png"><img style="width:745px" src="Untitled%201.png"/></a></figure><p id="4fba615d-107c-453f-b48b-18f3d80a879f" class="">
+</p><h1 id="0da3c785-dfd5-4b1c-a9db-b2438aa94769" class="">File Storage</h1><h2 id="6a6c2acf-a997-40e1-8f80-ef256d37a325" class="">Criteria for file storage</h2><ul id="92794975-17ea-41d9-96e2-5739633915cf" class="bulleted-list"><li style="list-style-type:disc">Storage should be highly available for un-interrupted file operations.<ul id="a0986ac2-ea9c-4c13-a258-84f239fae4af" class="bulleted-list"><li style="list-style-type:circle">Preferable availability % should be order of <strong>five 9s</strong> i.e. maximum of 30-32 seconds down-time per year.</li></ul></li></ul><ul id="a8d71c56-b1fd-4814-b024-0ff11e6c7953" class="bulleted-list"><li style="list-style-type:disc">It should be scalable enough to support indefinite spikes in downloads (if not uploads) without failures.</li></ul><ul id="0192baf4-6850-4886-b215-6300d14d4295" class="bulleted-list"><li style="list-style-type:disc">High performant storage with no compromise on security.</li></ul><p id="8a32fd9a-f81f-4acb-bba7-4a8d84134e5e" class="">
+</p><p id="09e8ce7a-7e29-459e-8e92-6e4080f02941" class="">Options:</p><ol type="1" id="43055e63-3dd5-43fa-b73f-0258c76e9ae0" class="numbered-list" start="1"><li>Self managed - A storage that is setup and managed at a DC<ol type="a" id="d8bb10af-8f4f-45a2-9972-e60d80036403" class="numbered-list" start="1"><li>Upside - As it is self managed, the storage can be very well regulated.</li></ol><ol type="a" id="89417a47-a24c-4283-be62-3f9b88b44732" class="numbered-list" start="2"><li>Downside - <ol type="i" id="3ccfaed3-d160-4111-81d5-de46cc214ebb" class="numbered-list" start="1"><li>Cost of maintaining the storage and keeping the hardware and software updated and compliant all the time.</li></ol><ol type="i" id="83fe1fce-e9bc-4bf1-bacd-39f7af498a04" class="numbered-list" start="2"><li>Security &amp; high cost of attaining scalability &amp; high availability.</li></ol><ol type="i" id="7f11a91c-9a6a-4851-94df-c43edadf5e7a" class="numbered-list" start="3"><li>Scaling up requires setting up new hardware and patching it into existing network and load balancers.</li></ol></li></ol></li></ol><ol type="1" id="20099aa5-2b9b-4bfa-9085-c0704acb6374" class="numbered-list" start="2"><li>Fully managed - A storage that is managed by a cloud provider such as (AWS, Azure etc…)<ol type="a" id="107766e0-3bb9-4ec4-9ba8-126bb098ad07" class="numbered-list" start="1"><li>Upside - <ol type="i" id="f970b081-2b61-46d3-bfc6-06b15d0751cd" class="numbered-list" start="1"><li>Storage is available as service. Saves a lot of time in getting the service up.</li></ol><ol type="i" id="efdeff0a-b5ae-4485-b7c7-f021c6d05b70" class="numbered-list" start="2"><li>SLAs in place to ensure all criteria to be met</li></ol><ol type="i" id="04efac46-9810-4d75-b740-05996d8df7c2" class="numbered-list" start="3"><li>No cost for keeping hardware and software updated with latest versions and security patches.</li></ol><p id="236288b4-5e57-4429-b80d-4d4302543313" class="">
+</p><p id="8dfb97c4-8197-4b4f-88b3-6ebbcfff5c2e" class="">
+</p></li></ol></li></ol><h1 id="8b9e3771-02b9-49b8-b087-e6b5cc88ea04" class="">File Sync</h1><h2 id="2ea2d1d0-8ace-4c8a-b56e-dcff6c0545dd" class="">2 use cases for file sync:</h2><ol type="1" id="f640b297-faec-4aec-917a-72759edbd6b7" class="numbered-list" start="1"><li><mark class="highlight-teal">File metadata update</mark></li></ol><ol type="1" id="b1ca581c-9cb1-40d9-9353-aebe4d2dbeef" class="numbered-list" start="2"><li><mark class="highlight-teal">File collaboration</mark></li></ol><p id="4f116f33-a7a1-4fd3-9769-9368ac1c63fa" class="">
+</p><h2 id="5c6bc245-8809-47a4-ba5f-0fce7e28df40" class="">Sync mechanism for above use cases:</h2><h3 id="4bf819cb-e882-40e8-9224-b8debbe86fde" class="">File metadata update: An update on file metadata has to be synced to other devices.</h3><p id="bcd26972-c3bf-4e7d-85e7-e1fb54a40c3a" class="">Sequence:</p><ol type="1" id="dd94de3e-77d6-491f-82de-7cd95ec9bb5b" class="numbered-list" start="1"><li>An API call to App server to update the file’s metadata.</li></ol><ol type="1" id="5773645b-afd6-4f77-a777-bd020705b9fe" class="numbered-list" start="2"><li>API updates DB record and upon success it then publishes updated file metadata object on message queue.</li></ol><ol type="1" id="899c1cb4-1891-47fb-99cc-f8a63cad870a" class="numbered-list" start="3"><li>Returns the HTTP response to requested client.</li></ol><ol type="1" id="e49019d7-369a-483a-a4dd-bf6634fa3d4c" class="numbered-list" start="4"><li>Other devices (Web or Mobile) i.e. subscribers belonging to same consumer group, read file’s latest metadata and update the listing on the application.</li></ol><h3 id="39b598e0-28a3-4ba7-a195-5d09159af746" class="">File Collaboration </h3><ul id="a827b087-b541-4be6-9f69-bf60d5b8dac6" class="bulleted-list"><li style="list-style-type:disc"><mark class="highlight-red">Assumption - File is not compressed</mark></li></ul><ul id="ef472a65-837c-4bc3-b66f-f5acd0df453f" class="bulleted-list"><li style="list-style-type:disc">Collaboration requires continuous sync as the file needs to show latest updates from other users.</li></ul><ul id="e92bf948-84d4-41db-99f8-7e26ee1eb8a3" class="bulleted-list"><li style="list-style-type:disc">In order to make collaboration near real time, sync operation has to be light weight with minimum network traffic.</li></ul><ul id="afd6d198-c3f8-4a78-938d-0bd6556caecd" class="bulleted-list"><li style="list-style-type:disc">The system has to take care of Sync conflicts</li></ul><ul id="21b3de99-7042-433f-8fec-fd0451e7d45d" class="bulleted-list"><li style="list-style-type:disc">Using Delta Sync</li></ul><p id="a28bbf21-821a-410d-8c9c-f4aeab02023f" class="">
+</p><p id="5261fa52-a888-4edc-aa67-ad86eb447dea" class="">Sequence</p><ol type="1" id="a2ca7e02-ca8b-47e9-b4de-b811e50d9c1f" class="numbered-list" start="1"><li>Divide a file into blocks.</li></ol><ol type="1" id="3e2e4d55-b102-4e41-a307-2aaaecd66b3d" class="numbered-list" start="2"><li>Encrypt the block and upload it to storage.</li></ol><ol type="1" id="2784574e-b154-4de8-b419-55557162735d" class="numbered-list" start="3"><li>Publish an event to all subscribers of currently editing document.</li></ol><ol type="1" id="d9392ab8-f749-4105-b595-6e31ca73bdcb" class="numbered-list" start="4"><li>Each subscriber can fetch updated blocks of file and update them on view.</li></ol><p id="815375bc-ffe3-409c-ace2-327a3e0d023c" class="">
+</p><h1 id="0d0d2c16-227f-4855-9dad-87bf32f783c6" class="">File APIs</h1><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="b2ccb5bb-b8a1-485d-934b-401542f58550"><div style="font-size:1.5em"><span class="icon">💡</span></div><div style="width:100%">All APIs are based on REST guide lines and please assume that request and response are in JSON format except for files.</div></figure><h2 id="dbcb1cfa-50f5-4af3-843d-8dde4bd2affe" class="">APIs required for file metadata, upload and download files</h2><h3 id="5507a83c-fde9-40c7-84f0-d0fd798d61a8" class="">Metadata APIs</h3><ol type="1" id="b15e182e-eab5-4c04-83d9-d79fc122d0c9" class="numbered-list" start="1"><li>Create a new file<ol type="a" id="fcdf7970-27b1-4e14-9915-39e2d6d416f6" class="numbered-list" start="1"><li>URI - /api/v1/service/files</li></ol><ol type="a" id="e8e7ac1c-af6a-45a0-abdc-f66463bf99f1" class="numbered-list" start="2"><li>Http Method - POST</li></ol><ol type="a" id="68d66924-ee16-41dc-908a-6f3cfa90df95" class="numbered-list" start="3"><li>Request - </li></ol><pre id="da87b9ae-6ed2-46e1-9bc1-86da54236dca" class="code"><code>{
+    &quot;fileName&quot;:&quot;file-upload.txt&quot;
+    &quot;createdTimeStamp&quot;:&quot;1671184849&quot;,
+    &quot;uploadedBy&quot;:&quot;user1@app.com&quot;,
+    &quot;fileType&quot;:&quot;txt&quot;
+}</code></pre><p id="e50bc7ed-79a7-48e6-83eb-5d9e747b2cf0" class="">d. Response - 201 (Created)</p><pre id="07eeb7a8-4069-4967-965b-a64fe81c3a40" class="code"><code>{
+    &quot;token&quot;:&quot;18288GB1772YRT1&quot;
+}</code></pre></li></ol><p id="90b61edb-47d7-48cf-9fcb-45d4b3da4ef1" class="">
+</p><ol type="1" id="fe239576-09ee-44de-932f-c96eb260a84e" class="numbered-list" start="2"><li>Update file<ol type="a" id="c72da5c4-ba30-4363-bfd6-5bf663df4cff" class="numbered-list" start="1"><li>URI - /api/v1/service/files/{fileToken}</li></ol><ol type="a" id="0a10e789-26fe-4d27-ac86-d9266caf2375" class="numbered-list" start="2"><li>Http Method - PUT</li></ol><ol type="a" id="08a68624-c3b8-41ab-b586-80441b87c7e1" class="numbered-list" start="3"><li>Request - </li></ol><pre id="497b1432-2482-4429-964a-fef3e62948bb" class="code"><code>{
+    &quot;fileName&quot;:&quot;file-upload.txt&quot;
+    &quot;updatedBy&quot;:&quot;user1@app.com&quot;,
+    &quot;fileType&quot;:&quot;txt&quot;
+}</code></pre><p id="4076cd1b-79bf-473a-adc9-7e0db9e47f21" class=""> d. Response - 200 (OK)</p><p id="5557099b-00f0-4a35-b0a5-680663ee9bb6" class="">
+</p></li></ol><ol type="1" id="a6c530ec-5f1c-4557-830f-f8d6ba3b3c3a" class="numbered-list" start="3"><li>Get files by User &amp; directory<ol type="a" id="1b65f966-75b7-4d7a-91b8-58a9f9355a2c" class="numbered-list" start="1"><li>URI - /api/v1/service/files/directory/{directoryId}</li></ol><ol type="a" id="87c6673d-efe8-4164-8428-628ad8442ac3" class="numbered-list" start="2"><li>Http Method - GET</li></ol><ol type="a" id="28e69e32-8d09-420e-8014-a1857b5d0060" class="numbered-list" start="3"><li>Header</li></ol><pre id="b5d0558b-6bf5-4fe1-9e94-617b74876a0b" class="code"><code>&quot;X-User-Access-Token&quot;:&quot;e5868ebb4445fc2ad9f949956c1cb9ddefa0d421&quot;</code></pre><p id="052f1ad2-5f43-45f5-ac0c-efa74b05245f" class=""> d. Response - 200 </p><pre id="04f087e8-5855-4777-91d0-147b0926dba3" class="code"><code>{
+    &quot;directoryId&quot;:&quot;drt1182&quot;,
+    &quot;listing&quot;:[
+        {
+            &quot;name&quot;:&quot;directory-1&quot;,
+            &quot;type&quot;:&quot;directory&quot;,
+            &quot;URL&quot;:&quot;/namespace/directory&quot;
+        },
+        {
+            &quot;name&quot;:&quot;directory-1&quot;,
+            &quot;type&quot;:&quot;directory2&quot;,
+            &quot;URL&quot;:&quot;/namespace/directory2&quot;
+        },
+        {
+            &quot;name&quot;:&quot;file-1&quot;,
+            &quot;type&quot;:&quot;file1&quot;,
+            &quot;type&quot;:&quot;txt&quot;
+            &quot;URL&quot;:&quot;/workspace/v1/file1&quot;,
+            &quot;createdBy&quot;:&quot;user1&quot;
+        }
+        
+    ]
+}</code></pre></li></ol><p id="6fd4405c-9a57-4a79-ac60-d2f59223f15b" class="">
+</p></div></article></body></html>
